@@ -1,8 +1,8 @@
-package de.slothsoft.database.client;
+package de.slothsoft.jdbc.client;
 
-import de.slothsoft.database.core.Game;
-import de.slothsoft.database.core.GameException;
-import de.slothsoft.database.core.GameManager;
+import de.slothsoft.jdbc.core.Game;
+import de.slothsoft.jdbc.core.GameException;
+import de.slothsoft.jdbc.core.GameManager;
 
 public class Client {
 

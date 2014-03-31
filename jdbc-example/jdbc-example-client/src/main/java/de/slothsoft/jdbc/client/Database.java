@@ -1,12 +1,12 @@
-package de.slothsoft.database.client;
+package de.slothsoft.jdbc.client;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-import de.slothsoft.database.core.GameException;
-import de.slothsoft.database.core.GameManager;
-import de.slothsoft.database.impl.GameManagerImpl;
+import de.slothsoft.jdbc.core.GameException;
+import de.slothsoft.jdbc.core.GameManager;
+import de.slothsoft.jdbc.impl.GameManagerImpl;
 
 public class Database {
 

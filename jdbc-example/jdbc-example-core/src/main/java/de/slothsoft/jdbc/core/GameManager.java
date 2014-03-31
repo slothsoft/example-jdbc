@@ -1,4 +1,4 @@
-package de.slothsoft.database.core;
+package de.slothsoft.jdbc.core;
 
 public interface GameManager {
 
