@@ -11,7 +11,7 @@ import de.slothsoft.jdbc.impl.GameManagerImpl;
 public class Database {
 
     private static final String DATABASE_DRIVER = "org.sqlite.JDBC";
-    private static final String DATABASE_URL = "jdbc:sqlite::memory:";
+    private static final String DATABASE_URL = "jdbc:sqlite:sample.db";
 
     private static Database instance = new Database();
 

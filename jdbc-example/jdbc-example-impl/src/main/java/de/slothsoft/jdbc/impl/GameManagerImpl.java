@@ -10,8 +10,8 @@ import java.util.List;
 
 import de.slothsoft.jdbc.core.Game;
 import de.slothsoft.jdbc.core.GameException;
-import de.slothsoft.jdbc.core.GameManager;
 import de.slothsoft.jdbc.core.GameException.Code;
+import de.slothsoft.jdbc.core.GameManager;
 
 public class GameManagerImpl implements GameManager {
 
@@ -20,8 +20,7 @@ public class GameManagerImpl implements GameManager {
     public GameManagerImpl(Connection connection) throws GameException {
 	try {
 	    this.connection = connection;
-	    this.connection.setAutoCommit(false);
-	    executeUpdate("CREATE TABLE game (id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR, releaseYear INT);");
+	    executeUpdate("CREATE TABLE IF NOT EXISTS game (id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR, releaseYear INT);");
 	} catch (Exception e) {
 	    throw new GameException(Code.INITIALIZATION_ERROR, e);
 	}
