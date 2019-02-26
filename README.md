@@ -18,11 +18,13 @@ This project shows how to create a simple connection to a database using JDBC, a
 
 ### Prerequisites
 
-You need at least **Java 11** or above to run the code. But a **Java 7** version is still in the branches, if you need it. 
+This example is compiled with **Java 11**, but you can probably change that in the *pom.xml* without losing functionality. There is still a **Java 7** version in the branches, if you need it. 
 
 
 ### Using the Example
 
+
+Checkout this project and run the [Client](https://github.com/slothsoft/example-jdbc/blob/master/client/src/main/java/de/slothsoft/example/jdbc/client/Client.java). You can then move along the other classes to see how everything works or read the tutorial below.
 
 
 ##  Versions
@@ -35,9 +37,9 @@ You need at least **Java 11** or above to run the code. But a **Java 7** version
 
 ##  Tutorial
 
-What I want to do today is to show how to create a simple connection to a database using JDBC, all the while displaying some architectural best practices. The source code is stored via GitHub (link at the end).
+What I want to do today is to show how to create a simple connection to a database using JDBC, all the while displaying some architectural best practices. The example code will create, read, update and delete games into our own database.
 
-This tutorial works for many different types of databases, most importantly relational databases (these using SQL). I decided to use SQLite, because I need it for my current project and it's the smallest implementation for the use case. You are free to use whatever you feel like, due to the power of JDBC.
+This tutorial works for many different types of databases, most importantly relational databases (the ones using SQL). I decided to use SQLite, because I need it for my current project and it's the smallest implementation for the use case. You are free to use whatever you feel like, due to the power of JDBC.
 
 ### What is JDBC
 
@@ -51,7 +53,7 @@ JDBC is like a form all your family members have to fill out regarding your hous
 
 Speaking of houses: Each house must have a good architecture. Imagine having the toilet inside the kitchen! Some coding decisions are just as bad, so I'm now talking a bit about how to structure source code well.
 
-**Classes** should have one use case. All the methods should circle around a specific topic. Try explaining what your class does: If you use a lot of "Ands" it probably does to much. Inside the class methods and fields can (and should be) tightly intervined, but the public methods should be sparse and well defined.
+**Classes** should have one use case. All the methods should circle around a specific topic. Try explaining what your class does: If you use a lot of "Ands" it probably does to much. Inside the class methods and fields can (and should be) tightly intertwined, but the public methods should be sparse and well defined.
 
 The same holds true for entire modules. That's why its always a good idea to separate GUI from persistence. And the way to do it is via a dedicated module for the "contract" between the two. This contract consists of an interface like that:
 
@@ -77,7 +79,7 @@ public class Game {
 }
 ```
 
-This basically tells lets the GUI say: "I don't care how and where my data is stored, but I know I can save and find my games." And the persistence layer says: "I don't care if my client is command line or with some fancy GUI, I'll concentrate on persisting the data I get the only way I know how to.
+This basically lets the GUI say: "I don't care how and where my data is stored, but I know I can save and find my games." And the persistence layer says: "I don't care if my client is command line or with some fancy GUI, I'll concentrate on persisting the data I get the only way I know how to.
 
 Since this module is the base for both GUI and persistence (or client and server) I'm naming it "core" in this example.
 
@@ -90,18 +92,25 @@ The center class for a JDBC based persistence class is the `java.sql.Connection`
 ```java
 public class GameManagerImpl implements GameManager {
 
-    private final Connection connection;
 
-    public GameManagerImpl(Connection connection) throws SQLException {
-		this.connection = connection;
-		initTable();
-    }
-	
-	private void initTable() {
-		Statement statement = this.connection.createStatement();
-		statement.executeQuery("CREATE TABLE IF NOT EXISTS game (id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR, releaseYear INT);");
+	public GameManagerImpl(Connection connection) throws GameException {
+		try {
+			this.connection = connection;
+			executeUpdate("CREATE TABLE IF NOT EXISTS game (id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR, releaseYear INT);");
+		} catch (final Exception e) {
+			throw new GameException(Code.INITIALIZATION_ERROR, e);
+		}
 	}
 	
+	protected void executeUpdate(String query) throws GameException {
+		try {
+			final Statement statement = this.connection.createStatement();
+			statement.executeUpdate(query);
+		} catch (final SQLException e) {
+			throw new GameException(Code.INTERNAL_ERROR, e);
+		}
+	}
+
 	// ...
 }
 ```
@@ -109,42 +118,36 @@ public class GameManagerImpl implements GameManager {
 Of course one of the first queries should be to initialize the SQL table we are going to store our games in. After that is done, queries are rather simple:
 
 ```java
-    @Override
-    public Game createGame(Game game) throws GameException {
-		try {	
-			PreparedStatement statement = this.connection.prepareStatement(
-				"INSERT INTO game (name, releaseYear) VALUES(?, ?)");
-			statement.setObject(1, game.getName());
-			statement.setObject(2, game.getReleaseYear());
-			return getGame(statement.executeQuery().getInt(1));
-		} catch (SQLException e) {
-			throw new GameException(Code.INTERNAL_ERROR, e);
-		}
-    }
-	
-    @Override
-    public Game getGame(int id) throws GameException {
+	@Override
+	public Game createGame(Game game) throws GameException {
 		try {
-			PreparedStatement statement = this.connection.prepareStatement(
-				"SELECT id, name, releaseYear FROM game where id = ?");
-			statement.setObject(1, id);
-			ResultSet resultSet = statement.executeQuery();		
-			if (!resultSet.next())
-				throw new GameException(Code.NO_GAME_FOUND);
-			return convertToGame(resultSet);
-		} catch (SQLException e) {
+			final ResultSet resultSet = executePreparedUpdate("INSERT INTO game (name, releaseYear) VALUES(?, ?)",
+					game.getName(), game.getReleaseYear());
+			return getGame(resultSet.getInt(1));
+		} catch (final SQLException e) {
 			throw new GameException(Code.INTERNAL_ERROR, e);
 		}
-    }
+	}
 
-    private Game convertToGame(ResultSet resultSet) throws SQLException {
-		Game game = new Game();
+	@Override
+	public Game getGame(int id) throws GameException {
+		try {
+			final ResultSet resultSet = executePrepared("SELECT id, name, releaseYear FROM game where id=?", id);
+			if (!resultSet.next()) throw new GameException(Code.NO_GAME_FOUND);
+			return convertToGame(resultSet);
+		} catch (final SQLException e) {
+			throw new GameException(Code.INTERNAL_ERROR, e);
+		}
+	}
+
+	private Game convertToGame(ResultSet resultSet) throws SQLException {
+		final Game game = new Game();
 		game.setId(resultSet.getInt(1));
 		game.setName(resultSet.getString(2));
 		game.setReleaseYear(resultSet.getInt(3));
 		return game;
-    }
-	
+	}
+
 ```
 
 So what are these prepared statements? Lets say we have a query like this:
@@ -153,7 +156,8 @@ So what are these prepared statements? Lets say we have a query like this:
 String query = "SELECT * FROM game WHERE userId = " + userId + " AND name = '" + userInput + "';"; 
 ```
 
-What would happen if the user where to enter any of these?
+What would happen if the user were to enter any of these?
+
 ```java
 String showAll = "' OR true; --";
 String dropDatabase = "'; DROP DATABASE; --";
@@ -164,7 +168,7 @@ In the first case the user would see all games, even though clearly he should on
 Prepared queries are the way to go. These queries know where parameters are located and escapes them accordingly.
 
 So now that you know how to fire queries the right way, take a look at 
-[the finished implementation class](https://github.com/slothsoft/jdbc-example/blob/master/jdbc-example/jdbc-example-impl/src/main/java/de/slothsoft/jdbc/impl/GameManagerImpl.java). I tried to make the source code as readable as possible.
+[the finished implementation class](https://github.com/slothsoft/example-jdbc/blob/master/impl/src/main/java/de/slothsoft/example/jdbc/impl/GameManagerImpl.java). I tried to make the source code as readable as possible.
 
 How do we know this implementation does what it says it does? We'll create a JUnit test for that. 
 
@@ -178,7 +182,7 @@ As I said, I'll use SQLite for this one, which is a simple declaration inside th
 &lt;dependency&gt;
 	&lt;groupId>org.xerial&lt;/groupId&gt;
 	&lt;artifactId>sqlite-jdbc&lt;/artifactId&gt;
-	&lt;version>3.7.2&lt;/version&gt;
+	&lt;version>3.23.1&lt;/version&gt;
 	&lt;scope>test&lt;/scope&gt;
 &lt;/dependency&gt;
 ```
@@ -188,25 +192,23 @@ After that, the actual testing class is a piece of cake:
 ```xml
 public class GameManagerImplTest {
 
-    private GameManager gameManager;
+	private GameManager gameManager;
 
-    @Before
-    public void setUp() throws GameException, ClassNotFoundException, SQLException {
-		// with that we load the JDBC driver
+	@Before
+	public void setUp() throws GameException, ClassNotFoundException, SQLException {
 		Class.forName("org.sqlite.JDBC");
-		// this creates a new GameManager with a database in memory
 		this.gameManager = new GameManagerImpl(DriverManager.getConnection("jdbc:sqlite::memory:"));
-    }
+	}
 
-    @Test
-    public void testCreate() throws GameException {
-		Game createdGame = this.gameManager.createGame(new Game("New Game", 2000));
+	@Test
+	public void testCreate() throws GameException {
+		final Game createdGame = this.gameManager.createGame(new Game("New Game", 2000));
 
 		Assert.assertNotNull(createdGame);
 		Assert.assertNotNull(createdGame.getId());
 		Assert.assertEquals("New Game", createdGame.getName());
 		Assert.assertEquals(2000, createdGame.getReleaseYear());
-    }
+	}
 }
 ```
 
@@ -216,34 +218,40 @@ So now that we know our persistence module works, we can go build a client!
 
 This is going to be the third module and in an ideal world it would only have dependencies to the core. You can achieve this via dependency injection or OSGI, but for this simple project we accept the dependency towards the implementation and just keep it centered in one class.
 
-I namend the class unoriginally `Database` - it does basicly the same as the JUnit test.
+I named the class unoriginally `Database` - it does basically the same as the JUnit test.
 
 ```java
 public class Database {
 
-    private static final String DATABASE_DRIVER = "org.sqlite.JDBC";
-    private static final String DATABASE_URL = "jdbc:sqlite:sample.db";
+	private static final String DATABASE_DRIVER = "org.sqlite.JDBC";
+	private static final String DATABASE_URL = "jdbc:sqlite:sample.db";
 
-    private final Connection connection;
-    private GameManager gameManager;
+	private static Database instance = new Database();
 
-    private Database() {
+	public static Database getInstance() {
+		return instance;
+	}
+
+	private final Connection connection;
+	private GameManager gameManager;
+
+	private Database() {
 		try {
 			Class.forName(DATABASE_DRIVER);
 			this.connection = DriverManager.getConnection(DATABASE_URL);
-		} catch (ClassNotFoundException e) {
+		} catch (final ClassNotFoundException e) {
 			throw new RuntimeException("Could not find JDBC driver!", e);
-		} catch (SQLException e) {
+		} catch (final SQLException e) {
 			throw new RuntimeException("Could not open connection to database!", e);
 		}
-    }
+	}
 
-    public synchronized GameManager getGameManager() throws GameException {
+	public synchronized GameManager getGameManager() throws GameException {
 		if (this.gameManager == null) {
 			this.gameManager = new GameManagerImpl(this.connection);
 		}
 		return this.gameManager;
-    }
+	}
 }
 ```
 
@@ -252,18 +260,27 @@ So now its time for the actual client. We will settle for this small class:
 ```java
 public class Client {
 
-    public static void main(String[] args) throws GameException, ClassNotFoundException {
-		GameManager gameManager = Database.getInstance().getGameManager();
+	public static void main(String[] args) throws GameException {
+		final GameManager gameManager = Database.getInstance().getGameManager();
 
 		Game ednaAndHarvey = new Game();
 		ednaAndHarvey.setName("Edna & Harvey: The Breakout");
 		ednaAndHarvey.setReleaseYear(2008);
 
 		ednaAndHarvey = gameManager.createGame(ednaAndHarvey);
-		System.out.println("Created " + ednaAndHarvey.getName() + " with ID: " + ednaAndHarvey.getId() + "\\n");
+		System.out.println("Created " + ednaAndHarvey.getName() + " with ID: " + ednaAndHarvey.getId() + "\n");
+
+		System.out.println("Searching for games:");
+		for (final Game game : gameManager.findGames()) {
+			System.out.println("\tFound " + game.getName());
+		}
+		System.out.println();
+
+		System.out.println("Finished demo client!");
 
 		Database.getInstance().destroy();
-    }
+	}
+
 }
 ```
 
@@ -276,11 +293,11 @@ So what is this structure good for? Let's see how it handles changes.
 
 If you want to change the database: Just change the Maven dependency in the client and the constant `Database.DATABASE_DRIVER` and `Database.DATABASE_URL`. That's it. 
 
-If you want to change the entire implementation, lets say to a document database or an object oriented one: just put a second implementation module in your project and change the one class these classes get instantiated.
+If you want to change the entire implementation, lets say to a document database or an object oriented one: just put a second implementation module in your project and change the one class these classes get instantiated in.
 
 And if you want to change the client? Well just do it. Noone is telling you to use a command line interface...
 
-So in the end you should be able to structure a project with a database well, while using JDBC wrapping the actual implementation. If you want to see the entire project, I put it on [GitHub](https://github.com/slothsoft/jdbc-example). If there are any questions, I'd love to hear them.
+So in the end you should be able to structure a project with a database well, while using JDBC wrapping the actual implementation. If there are any questions, I'd love to hear them.
 
 
 ## License
