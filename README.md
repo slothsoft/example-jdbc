@@ -75,7 +75,7 @@ public class Game {
     private String name;
     private int releaseYear;
 
-	// getter and setter
+    // getter and setter
 }
 ```
 
@@ -93,60 +93,60 @@ The center class for a JDBC based persistence class is the `java.sql.Connection`
 public class GameManagerImpl implements GameManager {
 
 
-	public GameManagerImpl(Connection connection) throws GameException {
-		try {
-			this.connection = connection;
-			executeUpdate("CREATE TABLE IF NOT EXISTS game (id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR, releaseYear INT);");
-		} catch (final Exception e) {
-			throw new GameException(Code.INITIALIZATION_ERROR, e);
-		}
-	}
-	
-	protected void executeUpdate(String query) throws GameException {
-		try {
-			final Statement statement = this.connection.createStatement();
-			statement.executeUpdate(query);
-		} catch (final SQLException e) {
-			throw new GameException(Code.INTERNAL_ERROR, e);
-		}
-	}
+    public GameManagerImpl(Connection connection) throws GameException {
+        try {
+            this.connection = connection;
+            executeUpdate("CREATE TABLE IF NOT EXISTS game (id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR, releaseYear INT);");
+        } catch (final Exception e) {
+            throw new GameException(Code.INITIALIZATION_ERROR, e);
+        }
+    }
+    
+    protected void executeUpdate(String query) throws GameException {
+        try {
+            final Statement statement = this.connection.createStatement();
+            statement.executeUpdate(query);
+        } catch (final SQLException e) {
+            throw new GameException(Code.INTERNAL_ERROR, e);
+        }
+    }
 
-	// ...
+    // ...
 }
 ```
 
 Of course one of the first queries should be to initialize the SQL table we are going to store our games in. After that is done, queries are rather simple:
 
 ```java
-	@Override
-	public Game createGame(Game game) throws GameException {
-		try {
-			final ResultSet resultSet = executePreparedUpdate("INSERT INTO game (name, releaseYear) VALUES(?, ?)",
-					game.getName(), game.getReleaseYear());
-			return getGame(resultSet.getInt(1));
-		} catch (final SQLException e) {
-			throw new GameException(Code.INTERNAL_ERROR, e);
-		}
-	}
+    @Override
+    public Game createGame(Game game) throws GameException {
+        try {
+            final ResultSet resultSet = executePreparedUpdate("INSERT INTO game (name, releaseYear) VALUES(?, ?)",
+                    game.getName(), game.getReleaseYear());
+            return getGame(resultSet.getInt(1));
+        } catch (final SQLException e) {
+            throw new GameException(Code.INTERNAL_ERROR, e);
+        }
+    }
 
-	@Override
-	public Game getGame(int id) throws GameException {
-		try {
-			final ResultSet resultSet = executePrepared("SELECT id, name, releaseYear FROM game where id=?", id);
-			if (!resultSet.next()) throw new GameException(Code.NO_GAME_FOUND);
-			return convertToGame(resultSet);
-		} catch (final SQLException e) {
-			throw new GameException(Code.INTERNAL_ERROR, e);
-		}
-	}
+    @Override
+    public Game getGame(int id) throws GameException {
+        try {
+            final ResultSet resultSet = executePrepared("SELECT id, name, releaseYear FROM game where id=?", id);
+            if (!resultSet.next()) throw new GameException(Code.NO_GAME_FOUND);
+            return convertToGame(resultSet);
+        } catch (final SQLException e) {
+            throw new GameException(Code.INTERNAL_ERROR, e);
+        }
+    }
 
-	private Game convertToGame(ResultSet resultSet) throws SQLException {
-		final Game game = new Game();
-		game.setId(resultSet.getInt(1));
-		game.setName(resultSet.getString(2));
-		game.setReleaseYear(resultSet.getInt(3));
-		return game;
-	}
+    private Game convertToGame(ResultSet resultSet) throws SQLException {
+        final Game game = new Game();
+        game.setId(resultSet.getInt(1));
+        game.setName(resultSet.getString(2));
+        game.setReleaseYear(resultSet.getInt(3));
+        return game;
+    }
 
 ```
 
@@ -179,36 +179,35 @@ Up until now we didn't decide for a database, but for the JUnit test we have to.
 As I said, I'll use SQLite for this one, which is a simple declaration inside the *pom.xml*:
 
 ```xml
-&lt;dependency&gt;
-	&lt;groupId>org.xerial&lt;/groupId&gt;
-	&lt;artifactId>sqlite-jdbc&lt;/artifactId&gt;
-	&lt;version>3.23.1&lt;/version&gt;
-	&lt;scope>test&lt;/scope&gt;
-&lt;/dependency&gt;
+<dependency>
+    <groupId>org.xerial</groupId>
+    <artifactId>sqlite-jdbc</artifactId>
+    <version>3.23.1</version>
+</dependency>
 ```
 
 After that, the actual testing class is a piece of cake:
 
-```xml
+```java
 public class GameManagerImplTest {
 
-	private GameManager gameManager;
+    private GameManager gameManager;
 
-	@Before
-	public void setUp() throws GameException, ClassNotFoundException, SQLException {
-		Class.forName("org.sqlite.JDBC");
-		this.gameManager = new GameManagerImpl(DriverManager.getConnection("jdbc:sqlite::memory:"));
-	}
+    @Before
+    public void setUp() throws GameException, ClassNotFoundException, SQLException {
+        Class.forName("org.sqlite.JDBC");
+        this.gameManager = new GameManagerImpl(DriverManager.getConnection("jdbc:sqlite::memory:"));
+    }
 
-	@Test
-	public void testCreate() throws GameException {
-		final Game createdGame = this.gameManager.createGame(new Game("New Game", 2000));
+    @Test
+    public void testCreate() throws GameException {
+        final Game createdGame = this.gameManager.createGame(new Game("New Game", 2000));
 
-		Assert.assertNotNull(createdGame);
-		Assert.assertNotNull(createdGame.getId());
-		Assert.assertEquals("New Game", createdGame.getName());
-		Assert.assertEquals(2000, createdGame.getReleaseYear());
-	}
+        Assert.assertNotNull(createdGame);
+        Assert.assertNotNull(createdGame.getId());
+        Assert.assertEquals("New Game", createdGame.getName());
+        Assert.assertEquals(2000, createdGame.getReleaseYear());
+    }
 }
 ```
 
@@ -223,35 +222,35 @@ I named the class unoriginally `Database` - it does basically the same as the JU
 ```java
 public class Database {
 
-	private static final String DATABASE_DRIVER = "org.sqlite.JDBC";
-	private static final String DATABASE_URL = "jdbc:sqlite:sample.db";
+    private static final String DATABASE_DRIVER = "org.sqlite.JDBC";
+    private static final String DATABASE_URL = "jdbc:sqlite:sample.db";
 
-	private static Database instance = new Database();
+    private static Database instance = new Database();
 
-	public static Database getInstance() {
-		return instance;
-	}
+    public static Database getInstance() {
+        return instance;
+    }
 
-	private final Connection connection;
-	private GameManager gameManager;
+    private final Connection connection;
+    private GameManager gameManager;
 
-	private Database() {
-		try {
-			Class.forName(DATABASE_DRIVER);
-			this.connection = DriverManager.getConnection(DATABASE_URL);
-		} catch (final ClassNotFoundException e) {
-			throw new RuntimeException("Could not find JDBC driver!", e);
-		} catch (final SQLException e) {
-			throw new RuntimeException("Could not open connection to database!", e);
-		}
-	}
+    private Database() {
+        try {
+            Class.forName(DATABASE_DRIVER);
+            this.connection = DriverManager.getConnection(DATABASE_URL);
+        } catch (final ClassNotFoundException e) {
+            throw new RuntimeException("Could not find JDBC driver!", e);
+        } catch (final SQLException e) {
+            throw new RuntimeException("Could not open connection to database!", e);
+        }
+    }
 
-	public synchronized GameManager getGameManager() throws GameException {
-		if (this.gameManager == null) {
-			this.gameManager = new GameManagerImpl(this.connection);
-		}
-		return this.gameManager;
-	}
+    public synchronized GameManager getGameManager() throws GameException {
+        if (this.gameManager == null) {
+            this.gameManager = new GameManagerImpl(this.connection);
+        }
+        return this.gameManager;
+    }
 }
 ```
 
@@ -260,26 +259,26 @@ So now its time for the actual client. We will settle for this small class:
 ```java
 public class Client {
 
-	public static void main(String[] args) throws GameException {
-		final GameManager gameManager = Database.getInstance().getGameManager();
+    public static void main(String[] args) throws GameException {
+        final GameManager gameManager = Database.getInstance().getGameManager();
 
-		Game ednaAndHarvey = new Game();
-		ednaAndHarvey.setName("Edna & Harvey: The Breakout");
-		ednaAndHarvey.setReleaseYear(2008);
+        Game ednaAndHarvey = new Game();
+        ednaAndHarvey.setName("Edna & Harvey: The Breakout");
+        ednaAndHarvey.setReleaseYear(2008);
 
-		ednaAndHarvey = gameManager.createGame(ednaAndHarvey);
-		System.out.println("Created " + ednaAndHarvey.getName() + " with ID: " + ednaAndHarvey.getId() + "\n");
+        ednaAndHarvey = gameManager.createGame(ednaAndHarvey);
+        System.out.println("Created " + ednaAndHarvey.getName() + " with ID: " + ednaAndHarvey.getId() + "\n");
 
-		System.out.println("Searching for games:");
-		for (final Game game : gameManager.findGames()) {
-			System.out.println("\tFound " + game.getName());
-		}
-		System.out.println();
+        System.out.println("Searching for games:");
+        for (final Game game : gameManager.findGames()) {
+            System.out.println("\tFound " + game.getName());
+        }
+        System.out.println();
 
-		System.out.println("Finished demo client!");
+        System.out.println("Finished demo client!");
 
-		Database.getInstance().destroy();
-	}
+        Database.getInstance().destroy();
+    }
 
 }
 ```
