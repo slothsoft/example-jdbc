@@ -1,9 +1,9 @@
-package de.slothsoft.jdbc.core;
+package de.slothsoft.example.jdbc.core;
 
 import org.junit.Assert;
 import org.junit.Test;
 
-import de.slothsoft.jdbc.core.Game;
+import de.slothsoft.example.jdbc.core.Game;
 
 public class GameTest {
 

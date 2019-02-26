@@ -1,12 +1,12 @@
-package de.slothsoft.jdbc.client;
+package de.slothsoft.example.jdbc.client;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-import de.slothsoft.jdbc.core.GameException;
-import de.slothsoft.jdbc.core.GameManager;
-import de.slothsoft.jdbc.impl.GameManagerImpl;
+import de.slothsoft.example.jdbc.core.GameException;
+import de.slothsoft.example.jdbc.core.GameManager;
+import de.slothsoft.example.jdbc.impl.GameManagerImpl;
 
 /**
  * This class is for creating a connection with our database.

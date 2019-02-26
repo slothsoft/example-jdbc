@@ -1,4 +1,4 @@
-package de.slothsoft.jdbc.core;
+package de.slothsoft.example.jdbc.core;
 
 import java.util.Objects;
 

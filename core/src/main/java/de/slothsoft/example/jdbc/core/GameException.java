@@ -1,4 +1,4 @@
-package de.slothsoft.jdbc.core;
+package de.slothsoft.example.jdbc.core;
 
 /**
  * General exception for all kinds of stuff.

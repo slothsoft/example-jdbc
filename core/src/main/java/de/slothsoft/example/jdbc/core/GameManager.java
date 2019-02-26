@@ -1,4 +1,4 @@
-package de.slothsoft.jdbc.core;
+package de.slothsoft.example.jdbc.core;
 
 /**
  * The API interface clients should use, so they don't depend on the implementation.

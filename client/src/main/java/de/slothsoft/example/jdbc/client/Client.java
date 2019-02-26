@@ -1,8 +1,8 @@
-package de.slothsoft.jdbc.client;
+package de.slothsoft.example.jdbc.client;
 
-import de.slothsoft.jdbc.core.Game;
-import de.slothsoft.jdbc.core.GameException;
-import de.slothsoft.jdbc.core.GameManager;
+import de.slothsoft.example.jdbc.core.Game;
+import de.slothsoft.example.jdbc.core.GameException;
+import de.slothsoft.example.jdbc.core.GameManager;
 
 /**
  * This class is our "client". It's consuming our {@link GameManager} without ever using

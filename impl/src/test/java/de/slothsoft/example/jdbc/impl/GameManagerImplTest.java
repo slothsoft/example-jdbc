@@ -1,4 +1,4 @@
-package de.slothsoft.jdbc.impl;
+package de.slothsoft.example.jdbc.impl;
 
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -7,9 +7,10 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import de.slothsoft.jdbc.core.Game;
-import de.slothsoft.jdbc.core.GameException;
-import de.slothsoft.jdbc.core.GameManager;
+import de.slothsoft.example.jdbc.core.Game;
+import de.slothsoft.example.jdbc.core.GameException;
+import de.slothsoft.example.jdbc.core.GameManager;
+import de.slothsoft.example.jdbc.impl.GameManagerImpl;
 
 public class GameManagerImplTest {
 

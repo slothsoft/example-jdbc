@@ -1,4 +1,4 @@
-package de.slothsoft.jdbc.impl;
+package de.slothsoft.example.jdbc.impl;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -8,10 +8,10 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-import de.slothsoft.jdbc.core.Game;
-import de.slothsoft.jdbc.core.GameException;
-import de.slothsoft.jdbc.core.GameException.Code;
-import de.slothsoft.jdbc.core.GameManager;
+import de.slothsoft.example.jdbc.core.Game;
+import de.slothsoft.example.jdbc.core.GameException;
+import de.slothsoft.example.jdbc.core.GameManager;
+import de.slothsoft.example.jdbc.core.GameException.Code;
 
 /**
  * My implementation of {@link GameManager}.
