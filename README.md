@@ -1,5 +1,7 @@
 # JDBC Example
 
+[![Build Status](https://travis-ci.org/slothsoft/example-jdbc.svg?branch=master)](https://travis-ci.org/slothsoft/example-jdbc)
+
 - **Author:** [Stef Schulz](mailto:s.schulz@slothsoft.de)
 - **Repository:** <https://github.com/slothsoft/example-jdbc>
 - **Open Issues:** <https://github.com/slothsoft/example-jdbc/issues>
